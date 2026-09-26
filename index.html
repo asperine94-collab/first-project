@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AVIR Studio — Рэп, Трэп, Дрилл & Битмейкинг</title>
+  <!-- Tone.js for high-fidelity Web Audio synthesis & sequencing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <!-- Google Fonts: Orbitron & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0a0b10;
+      --bg-card: #12141d;
+      --bg-card-hover: #191c28;
+      --bg-panel: #0e1017;
+      --border: #222638;
+      --border-glow: #00e5ff33;
+      --accent-cyan: #00e5ff;
+      --accent-purple: #9d4edd;
+      --accent-magenta: #ff007f;
+      --accent-gold: #ffb703;
+      --text-main: #f0f2f8;
+      --text-muted: #8b92a8;
+      --active-step: #00e5ff;
+      --active-808: #9d4edd;
+      --active-snare: #ff007f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 80px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(180deg, #161824 0%, var(--bg-main) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-badge .subtag {
+      font-size: 0.7rem;
+      background: rgba(157, 78, 221, 0.2);
+      color: var(--accent-purple);
+      border: 1px solid rgba(157, 78, 221, 0.4);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .transport-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00b4d8, #7209b7);
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(0, 180, 216, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 20px rgba(0, 180, 216, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-play {
+      min-width: 90px;
+      justify-content: center;
+    }
+
+    .btn-play.playing {
+      background: linear-gradient(135deg, #ff007f, #d00000);
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+    }
+
+    .tempo-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-panel);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .tempo-box span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .tempo-input {
+      background: transparent;
+      border: none;
+      color: var(--accent-cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      width: 48px;
+      text-align: center;
+    }
+
+    /* Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      max-width: 1200px;
+      margin: 16px auto 0 auto;
+      padding: 0 20px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: #1c2032;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+    }
+
+    /* Main Container */
+    .main-content {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Audio Unlock Banner */
+    #audio-unlock-banner {
+      background: linear-gradient(90deg, #ff007f 0%, #7209b7 100%);
+      color: #fff;
+      text-align: center;
+      padding: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 0, 127, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Sequencer Grid */
+    .sequencer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .preset-selector-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preset-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip:hover, .chip.active {
+      background: rgba(0, 229, 255, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .track-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 6px;
+      border-radius: 8px;
+      background: var(--bg-panel);
+    }
+
+    @media (max-width: 768px) {
+      .track-row {
+        grid-template-columns: 120px 1fr;
+        gap: 6px;
+      }
+    }
+
+    .track-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-right: 6px;
+    }
+
+    .track-name-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .track-name-btn:hover {
+      color: var(--accent-cyan);
+    }
+
+    .track-btn-mute {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 800;
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .track-btn-mute.muted {
+      background: #d00000;
+      color: #fff;
+      border-color: #d00000;
+    }
+
+    .steps-container {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .step-btn {
+      height: 38px;
+      border-radius: 6px;
+      background: #171b26;
+      border: 1px solid #23283c;
+      cursor: pointer;
+      transition: transform 0.05s ease, background 0.15s ease;
+    }
+
+    .step-btn:nth-child(4n+1) {
+      border-color: #3b4363;
+    }
+
+    .step-btn.active-808 {
+      background: linear-gradient(180deg, #9d4edd, #5a189a);
+      border-color: #c77dff;
+      box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
+    }
+
+    .step-btn.active-kick {
+      background: linear-gradient(180deg, #ff007f, #b5179e);
+      border-color: #ff4d94;
+      box-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+    }
+
+    .step-btn.active-snare {
+      background: linear-gradient(180deg, #00e5ff, #0077b6);
+      border-color: #90e0ef;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+    }
+
+    .step-btn.active-hat {
+      background: linear-gradient(180deg, #ffb703, #fb8500);
+      border-color: #ffe3a8;
+      box-shadow: 0 0 8px rgba(255, 183, 3, 0.5);
+    }
+
+    .step-btn.active-synth {
+      background: linear-gradient(180deg, #06d6a0, #048a67);
+      border-color: #84f7d8;
+      box-shadow: 0 0 10px rgba(6, 214, 160, 0.5);
+    }
+
+    .step-btn.cursor-highlight {
+      border: 2px solid #ffffff !important;
+      transform: scale(1.08);
+      z-index: 2;
+    }
+
+    /* Performance Pads */
+    .pads-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .pads-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .drum-pad {
+      background: linear-gradient(145deg, #181b28, #10121c);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.1s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drum-pad:active, .drum-pad.hit {
+      transform: scale(0.96);
+      background: var(--accent-cyan);
+      box-shadow: 0 0 25px var(--accent-cyan);
+    }
+
+    .drum-pad .pad-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .drum-pad .pad-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* Lyrics Lab */
+    .lyrics-container {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .lyrics-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .lyrics-editor-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .lyrics-tools-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lyrics-textarea {
+      width: 100%;
+      height: 380px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Inter', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      padding: 16px;
+      resize: vertical;
+    }
+
+    .lyrics-textarea:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+
+    .lyrics-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .rhyme-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .rhyme-search-box {
+      display: flex;
+      gap: 8px;
+    }
+
+    .rhyme-input {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.85rem;
+    }
+
+    .rhyme-results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .rhyme-tag {
+      background: var(--bg-panel);
+      border: 1px solid #2a3147;
+      color: #b8c1db;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .rhyme-tag:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Colab & Bot Panels */
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .info-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-card p {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
+    .code-snippet {
+      background: #090a0f;
+      border: 1px solid #1f2333;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #00e5ff;
+      margin-bottom: 14px;
+      overflow-x: auto;
+    }
+
+    /* Canvas visualizer */
+    #visualizer {
+      width: 100%;
+      height: 48px;
+      background: var(--bg-panel);
+      border-radius: 8px;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Unlock for Mobile Browsers -->
+  <div id="audio-unlock-banner">
+    <span>🔊 Нажмите здесь, чтобы активировать звук AVIR Studio</span>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo-badge">
+        <h1>AVIR STUDIO</h1>
+        <span class="subtag">RAP • TRAP • DRILL</span>
+      </div>
+
+      <div class="transport-bar">
+        <button id="btn-play" class="btn btn-primary btn-play">
+          ▶ PLAY
+        </button>
+        <button id="btn-clear" class="btn">
+          🗑️ Очистить
+        </button>
+        <button id="btn-random" class="btn">
+          🎲 Рандом бит
+        </button>
+
+        <div class="tempo-box">
+          <span>BPM</span>
+          <input type="number" id="bpm-input" class="tempo-input" value="142" min="60" max="190">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-beatmaker">🥁 Битмейкер (Секвенсор)</button>
+    <button class="tab-btn" data-tab="tab-lyrics">🎤 Лаборатория Текстов & Рифм</button>
+    <button class="tab-btn" data-tab="tab-vocal">🎙️ Вокальная будка (Запись)</button>
+    <button class="tab-btn" data-tab="tab-colab">💻 Colab GPU + 7 TB Drive</button>
+    <button class="tab-btn" data-tab="tab-bot">🤖 Telegram Бот</button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- TAB 1: BEATMAKER -->
+    <div id="tab-beatmaker" class="tab-pane active">
+      <div class="sequencer-card">
+        <div class="preset-selector-bar">
+          <div class="preset-chips">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); align-self: center;">Стили:</span>
+            <button class="chip active" data-preset="drill">❄️ UK/NY Drill (142 BPM)</button>
+            <button class="chip" data-preset="trap">💣 Atlanta Trap (138 BPM)</button>
+            <button class="chip" data-preset="darkdrill">🧊 Dark Drill (144 BPM)</button>
+            <button class="chip" data-preset="boombap">🏙️ Boom Bap (92 BPM)</button>
+          </div>
+          <div>
+            <button id="btn-save-beat" class="btn">💾 Сохранить</button>
+          </div>
+        </div>
+
+        <!-- 8 Sequencer Tracks -->
+        <div id="sequencer-tracks">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Visualizer canvas -->
+        <canvas id="visualizer"></canvas>
+      </div>
+
+      <!-- Performance Pads -->
+      <h3 style="margin-bottom: 12px; font-size: 1.1rem;">⚡ Live Pads (Тапайте на телефоне или жмите клавиши)</h3>
+      <div class="pads-grid" id="pads-container">
+        <!-- Live pads rendered here -->
+      </div>
+    </div>
+
+    <!-- TAB 2: LYRICS & FLOW LAB -->
+    <div id="tab-lyrics" class="tab-pane">
+      <div class="lyrics-container">
+        <!-- Main Editor -->
+        <div class="lyrics-editor-card">
+          <div class="lyrics-tools-header">
+            <h3 style="font-size: 1.1rem;">📝 Рэп Текст & Флоу</h3>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn" id="btn-gen-drill-bars">⚡ Дрилл куплет</button>
+              <button class="btn" id="btn-gen-trap-bars">💣 Трэп куплет</button>
+              <button class="btn" id="btn-gen-street-bars">🏙️ Уличный рэп</button>
+              <button class="btn" id="btn-copy-lyrics">📋 Копировать</button>
+            </div>
+          </div>
+
+          <textarea id="lyrics-text" class="lyrics-textarea" placeholder="Пишите текст или сгенерируйте стиль выше...
+
+[Интро]
+AVIR Studio на бите... 142 на метрономе.
+
+[Куплет 1]
+Холодный вечер, пар изо рта, накинут капюшон,
+808-й скользит по нотам, раскачивая весь район.
+Мы не бросаем слов на ветер, если взят прицел,
+AVIR на студии до утра — кто выдержал, тот уцелел.
+
+[Припев]
+Этот бас ломает стены, этот флоу течёт как ртуть..."></textarea>
+
+          <div class="lyrics-stats">
+            <span id="stat-lines">Строк: 0</span>
+            <span id="stat-words">Слов: 0</span>
+            <span id="stat-syllables">Слогов в посл. строке: 0</span>
+          </div>
+        </div>
+
+        <!-- Rhyme Assistant Sidebar -->
+        <div class="rhyme-card">
+          <h3 style="font-size: 1.1rem;">🎯 Помощник Рифм</h3>
+          <div class="rhyme-search-box">
+            <input type="text" id="rhyme-input" class="rhyme-input" placeholder="Введите слово (напр. район, бит)...">
+            <button class="btn btn-primary" id="btn-search-rhyme">Найти</button>
+          </div>
+
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Быстрые клики (нажмите для рифм):</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            <span class="chip" onclick="searchWord('бит')">бит</span>
+            <span class="chip" onclick="searchWord('район')">район</span>
+            <span class="chip" onclick="searchWord('дым')">дым</span>
+            <span class="chip" onclick="searchWord('стиль')">стиль</span>
+            <span class="chip" onclick="searchWord('город')">город</span>
+            <span class="chip" onclick="searchWord('бас')">бас</span>
+            <span class="chip" onclick="searchWord('блок')">блок</span>
+            <span class="chip" onclick="searchWord('флоу')">флоу</span>
+          </div>
+
+          <div class="rhyme-results" id="rhyme-results-container">
+            <!-- Results tags -->
+          </div>
+
+          <div style="border-top: 1px solid var(--border); padding-top: 12px;">
+            <h4 style="font-size: 0.85rem; margin-bottom: 8px;">🔥 Случайный панчлайн:</h4>
+            <p id="punchline-display" style="font-size: 0.85rem; color: var(--accent-cyan); font-style: italic;">
+              «808-й рвёт саб, пока твой рэп ищет оправдания.»
+            </p>
+            <button class="btn" style="margin-top: 8px; width: 100%;" id="btn-new-punch">Сгенерировать панч</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: VOCAL BOOTH -->
+    <div id="tab-vocal" class="tab-pane">
+      <div class="info-card">
+        <h3>🎙️ Вокальная будка (Запись поверх бита)</h3>
+        <p>Вы можете записать свой голос или фристайл прямо через микрофон телефона или компьютера, пока играет ваш бит.</p>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+          <button id="btn-record-vocal" class="btn btn-primary" style="padding: 12px 24px;">
+            🔴 Начать запись
+          </button>
+          <span id="recording-status" style="font-weight: 600; font-size: 0.9rem; color: var(--text-muted);">Микрофон готов</span>
+        </div>
+
+        <audio id="vocal-playback" controls style="width: 100%; margin-top: 12px; display: none;"></audio>
+      </div>
+    </div>
+
+    <!-- TAB 4: COLAB & 7 TB DRIVE -->
+    <div id="tab-colab" class="tab-pane">
+      <div class="info-card">
+        <h3>💻 Google Colab GPU + 7 TB Google Workspace</h3>
+        <p>
+          Вся тяжелая нейросетевая магия (разделение вокала и музыки Demucs, генерация треков Meta MusicGen, обучение голосовых моделей RVC) запускается в Google Colab на видеокартах Nvidia (T4 / A100) с прямым доступом к вашим <strong>7 ТБ Google Drive</strong>!
+        </p>
+
+        <h4 style="margin-bottom: 8px; color: #fff;">1. Файл блокнота уже создан в репозитории:</h4>
+        <div class="code-snippet">colab/AVIR_Studio_Colab_GPU.ipynb</div>
+
+        <h4 style="margin-bottom: 8px; color: #fff;">2. Как открыть в 1 клик:</h4>
+        <p>Зайдите в <a href="https://colab.research.google.com" target="_blank" style="color: var(--accent-cyan);">Google Colab</a>, выберите <em>GitHub</em>, введите репозиторий <code>asperine94-collab/first-project</code> и откройте блокнот.</p>
+
+        <h4 style="margin-bottom: 8px; color: #fff;">3. Что умеет блокнот:</h4>
+        <ul style="margin-left: 20px; line-height: 1.8; color: var(--text-muted); font-size: 0.9rem;">
+          <li>Монтировать ваши 7 ТБ хранилища в папку <code>/content/drive/MyDrive/AVIR_Studio/</code>.</li>
+          <li>Разделять любые готовые треки на чистый вокал, бас, барабаны и мелодию (Demucs AI).</li>
+          <li>Генерировать трэп и дрилл сэмплы через MusicGen.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- TAB 5: TELEGRAM BOT -->
+    <div id="tab-bot" class="tab-pane">
+      <div class="info-card">
+        <h3>🤖 Telegram Бот — AVIR Studio Bot</h3>
+        <p>
+          Мы уже создали код бота в файле <code>bot/avir_bot.js</code>. Бот умеет генерировать тексты под дрилл/трэп, подбирать рифмы прямо в чате Telegram и отправлять статус сервера.
+        </p>
+
+        <h4 style="margin-bottom: 8px; color: #fff;">Инструкция по привязке токена:</h4>
+        <ol style="margin-left: 20px; line-height: 1.8; color: var(--text-muted); font-size: 0.9rem;">
+          <li>Откройте в Telegram бота <strong>@BotFather</strong>.</li>
+          <li>Напишите команду <code>/newbot</code>, задайте имя (например <em>AVIR Studio Bot</em>) и юзернейм.</li>
+          <li>Скопируйте выданный токен (вида <code>123456789:ABC...</code>).</li>
+          <li>Пришлите токен мне в чат — я сразу активирую бота на сервере!</li>
+        </ol>
+
+        <div style="margin-top: 16px;">
+          <h4 style="margin-bottom: 8px; color: #fff;">Команды бота:</h4>
+          <div class="code-snippet">
+/start — Главное меню студии
+/rhyme <слово> — Подобрать рэп-рифмы
+/drill — UK/NY Drill панчи и куплеты
+/trap — Трэп флоу
+/street — Уличный рэп
+/punchline — Ударный панчлайн
+/colab — Связка с 7 TB Google Drive
+/studio — Ссылка на веб-плеер
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /* --- AVIR STUDIO JAVASCRIPT ENGINE --- */
+
+    let isAudioStarted = false;
+    let isPlaying = false;
+    let currentStep = 0;
+
+    // Track definitions
+    const TRACKS = [
+      { id: '808', name: '808 Sub-Bass', color: 'active-808', note: 'C1', type: 'synth' },
+      { id: 'kick', name: 'Punch Kick', color: 'active-kick', note: 'C1', type: 'kick' },
+      { id: 'snare', name: 'Drill Snare', color: 'active-snare', note: 'D2', type: 'snare' },
+      { id: 'clap', name: 'Street Clap', color: 'active-snare', note: 'C2', type: 'clap' },
+      { id: 'hat_closed', name: 'Hi-Hat (Rolls)', color: 'active-hat', note: 'G3', type: 'hat' },
+      { id: 'hat_open', name: 'Open Hi-Hat', color: 'active-hat', note: 'C4', type: 'openhat' },
+      { id: 'bell_synth', name: 'Dark Pluck', color: 'active-synth', note: 'F3', type: 'bell' },
+      { id: 'chant_fx', name: 'Street Chant', color: 'active-kick', note: 'A2', type: 'chant' }
+    ];
+
+    // 8 tracks x 16 steps
+    let grid = TRACKS.map(() => new Array(16).fill(false));
+    let mutes = TRACKS.map(() => false);
+
+    // Tone.js Instruments
+    let synths = {};
+    let masterCompressor, masterLimiter, masterGain;
+
+    function initAudio() {
+      if (isAudioStarted) return;
+      Tone.start();
+      isAudioStarted = true;
+      document.getElementById('audio-unlock-banner').style.display = 'none';
+
+      // Master bus
+      masterCompressor = new Tone.Compressor({ threshold: -16, ratio: 4 }).toDestination();
+      masterLimiter = new Tone.Limiter(-0.5).connect(masterCompressor);
+      masterGain = new Tone.Gain(0.85).connect(masterLimiter);
+
+      // 1. 808 Sub Bass Synth
+      synths['808'] = new Tone.MonoSynth({
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.01, decay: 0.5, sustain: 0.4, release: 0.8 },
+        filterEnvelope: { attack: 0.005, decay: 0.2, sustain: 0.2, release: 0.4, baseFrequency: 60, octaves: 2.5 }
+      }).connect(masterGain);
+
+      // 2. Punch Kick
+      synths['kick'] = new Tone.MembraneSynth({
+        pitchDecay: 0.06,
+        octaves: 6,
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.001, decay: 0.35, sustain: 0.01, release: 0.3 }
+      }).connect(masterGain);
+
+      // 3. Drill Snare
+      synths['snare'] = new Tone.NoiseSynth({
+        noise: { type: 'white' },
+        envelope: { attack: 0.002, decay: 0.18, sustain: 0.02 }
+      }).connect(masterGain);
+
+      // 4. Clap
+      synths['clap'] = new Tone.NoiseSynth({
+        noise: { type: 'pink' },
+        envelope: { attack: 0.005, decay: 0.14, sustain: 0 }
+      }).connect(masterGain);
+
+      // 5. Hi-Hat
+      synths['hat_closed'] = new Tone.MetalSynth({
+        frequency: 240,
+        envelope: { attack: 0.001, decay: 0.04, release: 0.02 },
+        harmonicity: 5.1,
+        modulationIndex: 32,
+        resonance: 4000,
+        octaves: 1.5
+      }).connect(masterGain);
+      synths['hat_closed'].volume.value = -6;
+
+      // 6. Open Hat
+      synths['hat_open'] = new Tone.MetalSynth({
+        frequency: 200,
+        envelope: { attack: 0.001, decay: 0.3, release: 0.1 },
+        harmonicity: 4.8,
+        modulationIndex: 28,
+        resonance: 3500,
+        octaves: 1.5
+      }).connect(masterGain);
+      synths['hat_open'].volume.value = -8;
+
+      // 7. Dark Bell / Pluck Synth
+      synths['bell_synth'] = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.005, decay: 0.4, sustain: 0.1, release: 0.8 }
+      }).connect(masterGain);
+      synths['bell_synth'].volume.value = -4;
+
+      // 8. Chant FX
+      synths['chant_fx'] = new Tone.MembraneSynth({
+        pitchDecay: 0.15,
+        octaves: 3,
+        envelope: { attack: 0.02, decay: 0.25, sustain: 0.05, release: 0.2 }
+      }).connect(masterGain);
+
+      // Transport setup
+      Tone.Transport.bpm.value = parseInt(document.getElementById('bpm-input').value, 10) || 142;
+      Tone.Transport.scheduleRepeat((time) => {
+        step(time);
+      }, '16n');
+
+      setupVisualizer();
+    }
+
+    function triggerSound(trackIndex, time = null) {
+      if (!isAudioStarted) initAudio();
+      if (mutes[trackIndex]) return;
+
+      const track = TRACKS[trackIndex];
+      const now = time || Tone.now();
+
+      try {
+        if (track.id === '808') {
+          // Drill 808 glide
+          synths['808'].triggerAttackRelease(track.note, '8n', now);
+        } else if (track.id === 'kick') {
+          synths['kick'].triggerAttackRelease('C1', '8n', now);
+        } else if (track.id === 'snare') {
+          synths['snare'].triggerAttackRelease('16n', now);
+        } else if (track.id === 'clap') {
+          synths['clap'].triggerAttackRelease('16n', now);
+        } else if (track.id === 'hat_closed') {
+          synths['hat_closed'].triggerAttackRelease('32n', now);
+        } else if (track.id === 'hat_open') {
+          synths['hat_open'].triggerAttackRelease('8n', now);
+        } else if (track.id === 'bell_synth') {
+          // Dark minor chord tones for Drill/Trap
+          const notes = ['D3', 'F3', 'A3', 'C4'];
+          const noteToPlay = notes[Math.floor(Math.random() * notes.length)];
+          synths['bell_synth'].triggerAttackRelease(noteToPlay, '8n', now);
+        } else if (track.id === 'chant_fx') {
+          synths['chant_fx'].triggerAttackRelease('G2', '8n', now);
+        }
+      } catch (e) {
+        console.warn('Audio trigger error:', e);
+      }
+    }
+
+    function step(time) {
+      for (let t = 0; t < TRACKS.length; t++) {
+        if (grid[t][currentStep]) {
+          triggerSound(t, time);
+        }
+      }
+
+      // Visual step update on main thread
+      Tone.Draw.schedule(() => {
+        document.querySelectorAll('.step-btn').forEach(btn => btn.classList.remove('cursor-highlight'));
+        document.querySelectorAll(`.step-btn[data-step="${currentStep}"]`).forEach(btn => {
+          btn.classList.add('cursor-highlight');
+        });
+      }, time);
+
+      currentStep = (currentStep + 1) % 16;
+    }
+
+    // Render UI Sequencer Rows
+    function renderSequencer() {
+      const container = document.getElementById('sequencer-tracks');
+      container.innerHTML = '';
+
+      TRACKS.forEach((track, tIdx) => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+
+        const info = document.createElement('div');
+        info.className = 'track-info';
+
+        const nameBtn = document.createElement('button');
+        nameBtn.className = 'track-name-btn';
+        nameBtn.innerHTML = `<span>▶</span> ${track.name}`;
+        nameBtn.onclick = () => triggerSound(tIdx);
+
+        const muteBtn = document.createElement('button');
+        muteBtn.className = `track-btn-mute ${mutes[tIdx] ? 'muted' : ''}`;
+        muteBtn.innerText = 'M';
+        muteBtn.onclick = () => {
+          mutes[tIdx] = !mutes[tIdx];
+          muteBtn.classList.toggle('muted', mutes[tIdx]);
+        };
+
+        info.appendChild(nameBtn);
+        info.appendChild(muteBtn);
+        row.appendChild(info);
+
+        const stepsCont = document.createElement('div');
+        stepsCont.className = 'steps-container';
+
+        for (let s = 0; s < 16; s++) {
+          const stepBtn = document.createElement('button');
+          stepBtn.className = `step-btn ${grid[tIdx][s] ? track.color : ''}`;
+          stepBtn.dataset.step = s;
+          stepBtn.dataset.track = tIdx;
+
+          stepBtn.onclick = () => {
+            initAudio();
+            grid[tIdx][s] = !grid[tIdx][s];
+            stepBtn.classList.toggle(track.color, grid[tIdx][s]);
+            if (grid[tIdx][s]) triggerSound(tIdx);
+          };
+
+          stepsCont.appendChild(stepBtn);
+        }
+
+        row.appendChild(stepsCont);
+        container.appendChild(row);
+      });
+
+      renderPads();
+    }
+
+    // Performance Pads
+    function renderPads() {
+      const padsContainer = document.getElementById('pads-container');
+      padsContainer.innerHTML = '';
+
+      const keys = ['1', '2', '3', '4', 'Q', 'W', 'E', 'R'];
+
+      TRACKS.forEach((track, idx) => {
+        const pad = document.createElement('div');
+        pad.className = 'drum-pad';
+        pad.innerHTML = `
+          <div class="pad-title">${track.name}</div>
+          <div class="pad-sub">Клик / [${keys[idx]}]</div>
+        `;
+
+        pad.onpointerdown = (e) => {
+          e.preventDefault();
+          initAudio();
+          triggerSound(idx);
+          pad.classList.add('hit');
+          setTimeout(() => pad.classList.remove('hit'), 120);
+        };
+
+        padsContainer.appendChild(pad);
+      });
+    }
+
+    // Keyboard trigger bindings
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+      const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, 'q': 4, 'w': 5, 'e': 6, 'r': 7, 'Q': 4, 'W': 5, 'E': 6, 'R': 7 };
+      if (keyMap[e.key] !== undefined) {
+        initAudio();
+        triggerSound(keyMap[e.key]);
+        const pad = document.querySelectorAll('.drum-pad')[keyMap[e.key]];
+        if (pad) {
+          pad.classList.add('hit');
+          setTimeout(() => pad.classList.remove('hit'), 120);
+        }
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      }
+    });
+
+    // Presets
+    const PRESETS = {
+      drill: {
+        bpm: 142,
+        grid: [
+          [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0], // 808 slide
+          [1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0], // Kick
+          [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0], // Snare (offbeat drill bounce)
+          [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0], // Clap
+          [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1], // Rolling hats
+          [0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,0,0], // Open hat
+          [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,1,0,0], // Dark bell
+          [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]  // Chant
+        ]
+      },
+      trap: {
+        bpm: 138,
+        grid: [
+          [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0], // 808
+          [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,1,0,0], // Kick
+          [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0], // Snare
+          [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0], // Clap
+          [1,0,1,0, 1,1,1,0, 1,0,1,1, 1,1,1,1], // Hat rolls
+          [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0], // Open hat
+          [1,0,0,1, 0,0,1,0, 1,0,0,1, 0,0,1,0], // Melody
+          [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        ]
+      },
+      darkdrill: {
+        bpm: 144,
+        grid: [
+          [1,0,0,0, 1,0,0,0, 0,1,0,0, 1,0,0,0],
+          [1,0,0,0, 0,0,1,0, 0,0,0,0, 1,0,0,0],
+          [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0],
+          [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+          [1,1,0,1, 1,0,1,1, 0,1,1,0, 1,1,1,1],
+          [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,0,0],
+          [1,0,0,1, 0,1,0,0, 1,0,0,0, 0,1,0,1],
+          [0,0,0,0, 1,0,0,0, 0,0,0,0, 0,0,0,0]
+        ]
+      },
+      boombap: {
+        bpm: 92,
+        grid: [
+          [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+          [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,1,0],
+          [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+          [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+          [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+          [0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0],
+          [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+          [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        ]
+      }
+    };
+
+    function loadPreset(name) {
+      const p = PRESETS[name];
+      if (!p) return;
+      document.getElementById('bpm-input').value = p.bpm;
+      if (Tone.Transport) Tone.Transport.bpm.value = p.bpm;
+
+      grid = p.grid.map(row => [...row]);
+      renderSequencer();
+    }
+
+    function togglePlay() {
+      initAudio();
+      if (isPlaying) {
+        Tone.Transport.stop();
+        isPlaying = false;
+        document.getElementById('btn-play').innerText = '▶ PLAY';
+        document.getElementById('btn-play').classList.remove('playing');
+        document.querySelectorAll('.step-btn').forEach(btn => btn.classList.remove('cursor-highlight'));
+        currentStep = 0;
+      } else {
+        Tone.Transport.start();
+        isPlaying = true;
+        document.getElementById('btn-play').innerText = '⏸ STOP';
+        document.getElementById('btn-play').classList.add('playing');
+      }
+    }
+
+    // Audio Visualizer
+    function setupVisualizer() {
+      const canvas = document.getElementById('visualizer');
+      const ctx = canvas.getContext('2d');
+      const analyser = new Tone.Analyser('waveform', 64);
+      masterGain.connect(analyser);
+
+      function draw() {
+        requestAnimationFrame(draw);
+        const values = analyser.getValue();
+        ctx.fillStyle = '#0e1017';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.beginPath();
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#00e5ff';
+
+        const sliceWidth = canvas.width / values.length;
+        let x = 0;
+
+        for (let i = 0; i < values.length; i++) {
+          const v = values[i];
+          const y = ((v + 1) / 2) * canvas.height;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          x += sliceWidth;
+        }
+
+        ctx.stroke();
+      }
+
+      draw();
+    }
+
+    /* --- LYRICS & RHYME ENGINE --- */
+
+    const rhymesData = {
+      'бит': ['монолит', 'горит', 'динамит', 'летит', 'зенит', 'яд и спирт', 'смертит', 'магнит', 'звучит'],
+      'район': ['миллион', 'батальон', 'рубикон', 'закон', 'циклон', 'стон', 'капюшон', 'корон', 'бетон'],
+      'дым': ['молодым', 'пустым', 'седым', 'один на один', 'режим', 'непобедим', 'простим'],
+      'стиль': ['автомобиль', 'эскадрилья', 'шпиль', 'пыль', 'быль', 'утиль', 'километры и миль'],
+      'звук': ['пульс рук', 'замкнутый круг', 'стук', 'лучший друг', 'испуг', 'вокруг', 'бук'],
+      'город': ['холод', 'вечный голод', 'молод', 'повод', 'расколот', 'молот', 'провод'],
+      'деньги': ['цепи', 'петли', 'ступени', 'тени', 'мишени', 'кредиты и пенни', 'арены'],
+      'улица': ['жмурится', 'курится', 'хмурится', 'будет судиться', 'не забудется'],
+      'блок': ['срок', 'порог', 'курок', 'урок', 'замок', 'прыжок', 'смог', 'поток', 'шок'],
+      'бас': ['сейчас', 'каркас', 'припас', 'в анфас', 'алмаз', 'приказ', 'для нас', 'фугас'],
+      'флоу': ['шоу', 'slow', 'blow', 'glow', 'low', 'вдоль и поперек', 'холодный сок'],
+      'слово': ['готово', 'сурово', 'основа', 'снова', 'свинцово', 'окова'],
+      'ночь': ['прочь', 'точь-в-точь', 'помочь', 'дочь', 'превозмочь'],
+      'брат': ['расклад', 'нарасхват', 'автомат', 'квадрат', 'фасад', 'закат', 'снаряд']
+    };
+
+    const punches = [
+      "⚡ «808-й рвёт саб, пока твой рэп ищет оправдания.»",
+      "❄️ «Холодный дрилл на блоке — здесь слова режут острее стали.»",
+      "🔥 «Мы подняли звук с нуля, теперь частоты трясут бетонные этажи.»",
+      "💎 «Трэп не в цепях, трэп в терпении и бессонных ночах на студии.»",
+      "🎯 «Каждый бар — точно в цель, каждый слайд баса — как выстрел в упор.»",
+      "🎙️ «AVIR Studio в эфире: чистый уличный флоу без фальши и масок.»"
+    ];
+
+    function searchWord(word) {
+      document.getElementById('rhyme-input').value = word;
+      performRhymeSearch();
+    }
+
+    function performRhymeSearch() {
+      const input = document.getElementById('rhyme-input').value.trim().toLowerCase();
+      const resultsCont = document.getElementById('rhyme-results-container');
+      resultsCont.innerHTML = '';
+
+      if (!input) return;
+
+      const list = rhymesData[input] || ['сталь', 'магистраль', 'педаль', 'сквозь печаль', 'деталь'];
+      list.forEach(r => {
+        const tag = document.createElement('span');
+        tag.className = 'rhyme-tag';
+        tag.innerText = r;
+        tag.onclick = () => {
+          const textarea = document.getElementById('lyrics-text');
+          textarea.value += ' ' + r;
+          updateStats();
+        };
+        resultsCont.appendChild(tag);
+      });
+    }
+
+    function countSyllables(text) {
+      const vowels = text.match(/[аеёиоуыэюяaeiouy]/gi);
+      return vowels ? vowels.length : 0;
+    }
+
+    function updateStats() {
+      const text = document.getElementById('lyrics-text').value;
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      const words = text.match(/\S+/g) || [];
+      const lastLine = lines.length > 0 ? lines[lines.length - 1] : '';
+
+      document.getElementById('stat-lines').innerText = `Строк: ${lines.length}`;
+      document.getElementById('stat-words').innerText = `Слов: ${words.length}`;
+      document.getElementById('stat-syllables').innerText = `Слогов в посл. строке: ${countSyllables(lastLine)}`;
+    }
+
+    /* --- VOCAL RECORDER --- */
+    let mediaRecorder;
+    let recordedChunks = [];
+    let isRecording = false;
+
+    async function toggleVocalRecording() {
+      const btn = document.getElementById('btn-record-vocal');
+      const status = document.getElementById('recording-status');
+      const playback = document.getElementById('vocal-playback');
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          recordedChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            playback.src = url;
+            playback.style.display = 'block';
+            status.innerText = 'Запись сохранена! Можете прослушать:';
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          btn.innerText = '⏹ Остановить запись';
+          btn.classList.add('playing');
+          status.innerText = '🔴 Идёт запись голоса... Пойте или читайте рэп!';
+
+          // Auto-start beat if not playing
+          if (!isPlaying) togglePlay();
+
+        } catch (err) {
+          alert('Доступ к микрофону отклонен или недоступен: ' + err.message);
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.innerText = '🔴 Начать запись';
+        btn.classList.remove('playing');
+      }
+    }
+
+    // Attach Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSequencer();
+      loadPreset('drill');
+
+      // Audio unlock
+      document.getElementById('audio-unlock-banner').onclick = initAudio;
+
+      // Transport
+      document.getElementById('btn-play').onclick = togglePlay;
+      document.getElementById('bpm-input').onchange = (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (Tone.Transport) Tone.Transport.bpm.value = val;
+      };
+
+      document.getElementById('btn-clear').onclick = () => {
+        grid = TRACKS.map(() => new Array(16).fill(false));
+        renderSequencer();
+      };
+
+      document.getElementById('btn-random').onclick = () => {
+        grid = TRACKS.map((t, idx) => {
+          return new Array(16).fill(false).map(() => Math.random() < (idx === 4 ? 0.6 : 0.2));
+        });
+        renderSequencer();
+      };
+
+      // Presets
+      document.querySelectorAll('.preset-chips .chip').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.preset-chips .chip').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          loadPreset(btn.dataset.preset);
+        };
+      });
+
+      // Tab switcher
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab).classList.add('active');
+        };
+      });
+
+      // Lyrics events
+      document.getElementById('lyrics-text').oninput = updateStats;
+      document.getElementById('btn-search-rhyme').onclick = performRhymeSearch;
+      document.getElementById('rhyme-input').onkeypress = (e) => {
+        if (e.key === 'Enter') performRhymeSearch();
+      };
+
+      document.getElementById('btn-new-punch').onclick = () => {
+        const p = punches[Math.floor(Math.random() * punches.length)];
+        document.getElementById('punchline-display').innerText = p;
+      };
+
+      document.getElementById('btn-copy-lyrics').onclick = () => {
+        const text = document.getElementById('lyrics-text').value;
+        navigator.clipboard.writeText(text);
+        alert('Текст скопирован в буфер обмена!');
+      };
+
+      document.getElementById('btn-gen-drill-bars').onclick = () => {
+        document.getElementById('lyrics-text').value += `\n\n[Дрилл куплет]\nХолодный ветер воет в арках, на часах за полночь,\nЗдесь каждый знает свой район и кто придет на помощь.\n808-й разносит блок, асфальт дрожит под весом,\nAVIR Studio в колоссах — мы правим этим процессом.`;
+        updateStats();
+      };
+
+      document.getElementById('btn-gen-trap-bars').onclick = () => {
+        document.getElementById('lyrics-text').value += `\n\n[Трэп куплет]\n138 на темпе, снейр стреляет как затвор,\nЯ не трачу время даром, закрывая разговор.\nБас гудит в мембранах, дым висит под потолком,\nЭтот звук идет наверх — мы забираем всё кругом.`;
+        updateStats();
+      };
+
+      document.getElementById('btn-gen-street-bars').onclick = () => {
+        document.getElementById('lyrics-text').value += `\n\n[Уличный куплет]\nПанельный блок, сырой туман, в глазах горит огонь,\nЕсли дал мужское слово — протяни свою ладонь.\nМы начинали с гаражей и битых микрофонов,\nТеперь наш голос заглушает гул чужих районов.`;
+        updateStats();
+      };
+
+      // Vocal recording
+      document.getElementById('btn-record-vocal').onclick = toggleVocalRecording;
+
+      // Save beat button
+      document.getElementById('btn-save-beat').onclick = () => {
+        const beatData = {
+          bpm: document.getElementById('bpm-input').value,
+          grid: grid
+        };
+        localStorage.setItem('avir_saved_beat', JSON.stringify(beatData));
+        alert('Бит успешно сохранен в памяти устройства!');
+      };
+
+      updateStats();
+    });
+  </script>
+</body>
+</html>
