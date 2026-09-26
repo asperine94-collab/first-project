@@ -1,0 +1,25 @@
+{
+  "name": "avir-studio",
+  "version": "1.0.0",
+  "description": "AVIR Studio - Музыкальная продакшн-платформа: рэп, трэп, дрилл, битмейкинг, тексты и Telegram-бот",
+  "main": "bot/avir_bot.js",
+  "scripts": {
+    "start": "node bot/avir_bot.js",
+    "bot": "node bot/avir_bot.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "grammy": "^1.35.0"
+  },
+  "keywords": [
+    "music",
+    "rap",
+    "trap",
+    "drill",
+    "beatmaker",
+    "avir-studio",
+    "telegram-bot"
+  ],
+  "author": "AVIR Studio",
+  "license": "MIT"
+}
